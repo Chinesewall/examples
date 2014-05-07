@@ -16,11 +16,22 @@
 			// First step is to get the list of makes
 			mmys.init(function(data){
 				var makes = mmys.getMakes();
+				console.log('Makes:');
+				console.log(makes);
 				mmys.getModels(function(data) {
+					console.log('Models:');
+					console.log(data);
 					var subs = mmys.getSubmodels('bmw', 'x5');
+					console.log('Submodels:');
 					console.log(subs);
+					var years = mmys.getYears('bmw', 'x5');
+					console.log('Years:');
+					console.log(years);
+					var styles = mmys.getStyles('bmw', 'x5', 2014);
+					console.log('Styles:');
+					console.log(styles);
 				}, 'bmw');
-			}, {api_key: '2ep93tpnyh6p5hgaxmp6pasq', state: 'new'});
+			}, {api_key: '2ep93tpnyh6p5hgaxmp6pasq', state: 'new', make: 'bmw'});
 		})();
 	</script>
 </body>

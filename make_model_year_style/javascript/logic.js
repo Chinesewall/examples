@@ -95,64 +95,77 @@
 			}
 		},
 		getSubmodels: function(make, model, year) {
-			var make = make || this.MAKE;
-			var model = model || this.MODEL;
-			var year = year || this.YEAR;
-			var submodel = {}
-			submodel[make] = {};
-			submodel[make][model] = {};
-			var len = this.models[make][model].years.length;
-			for (var i=0; i<len; i++) {
-				var len2 = this.models[make][model].years[i].styles.length
-				for (k=0; k<len2; k++) {
-					if (year && year != this.models[make][model].years[i].year) {
-						continue
-					}
-					submodel[make][model][this.models[make][model].years[i].year] = submodel[make][model][this.models[make][model].years[i].year] || {};
-					submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName] = submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName] || []
-					submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName].push(this.models[make][model].years[i].styles[k]);
-				}
-			}
-			return submodel;
-		}, 
-		getYears: function() {
-			var years = [];
-			if (this.YEAR) {
-				years.push(this.YEAR);
-			} else if (this.MODEL) {
-				var len = this.models[this.MAKE].length;
-				for (var i=0; i<len; i++) {
-					var len2 = this.models[this.MAKE][i].years.length;
-					for (k=0; k<len2; k++) {
-						
-					}
-				}
-			}
-			return years;
-		},
-		getStyles: function(fn, make, model, year) {
-			if (!make || !model) {
-				alert('Make and Model data is missing.');
-				return;
-			} else {
-				var that = this;
-				var year = parseInt(year) || that.YEAR;
-				var endpoint = (year > 0) ? '/api/vehicle/v2/'+make+'/'+model+'/'+year : '/api/vehicle/v2/'+make+'/'+model+'/years';
-				this.api(endpoint, params, function(data) {
-					var json = JSON.parse(data);
-					if (json.years) {
-						for (var i=0; i<json.years.length; i++) {
-							that.styles[json.years[i].year] = json.years[i].styles;
-						}
+			// Legit make and model!
+			if (make && this.makes[make] && model && this.models[make]) {
+				// Cached?
+				if (this.submodels[make] &&  this.submodels[make][model]) {
+					if (year && this.submodels[make][model][year]) {
+						return this.submodels[make][model][year];
 					} else {
-						if (json && json.styles.length > 0) {
-							that.styles[json.year] = json.styles;
+						return this.submodels[make][model];
+					}
+				} else { // Go grab the models
+					var make = make || this.MAKE;
+					var model = model || this.MODEL;
+					var year = year || this.YEAR;
+					var submodel = {}
+					submodel[make] = {};
+					submodel[make][model] = {};
+					var len = this.models[make][model].years.length;
+					for (var i=0; i<len; i++) {
+						var len2 = this.models[make][model].years[i].styles.length
+						for (k=0; k<len2; k++) {
+							if (year && year != this.models[make][model].years[i].year) {
+								continue
+							}
+							submodel[make][model][this.models[make][model].years[i].year] = submodel[make][model][this.models[make][model].years[i].year] || {};
+							submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName] = submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName] || []
+							submodel[make][model][this.models[make][model].years[i].year][this.models[make][model].years[i].styles[k].submodel.niceName].push(this.models[make][model].years[i].styles[k]);
 						}
 					}
-					if (typeof fn == 'function') {
-						fn(that.styles);
+					this.submodels = submodel;
+					return submodel[make][model];
+				}
+			} else {
+				alert('To return submodels, a valid car make and model values are needed.');
+			}
+		}, 
+		getYears: function(make, model) {
+			// Legit make and model!
+			if (make && this.makes[make] && model && this.models[make]) {
+				var submodels = this.getSubmodels(make, model);
+				var years = [];
+				for(var key in submodels) {
+					if(submodels.hasOwnProperty(key)) {
+						years.push(key);
 					}
-				});
+				}
+				return years;
+			} else {
+				alert('To return car years, a valid car make and model values are needed.');
+			}
+		},
+		getStyles: function(make, model, year, submodel) {
+			// Legit make and model!
+			if (make && this.makes[make] && model && this.models[make][model] && year && this.submodels[make][model][year]) {
+				var styles = [];
+				var subs = this.getSubmodels(make, model, year);
+				if (submodel) {
+					styles.push(subs[submodel]);
+				} else {
+					for(var key in subs) {
+						if(subs.hasOwnProperty(key)) {
+							var arr = subs[key];
+							var len = arr.length;
+							for (var i=0; i<len; i++) {
+								styles.push(arr[i]);
+							}
+						}
+					}
+				}
+				return styles;
+			} else {
+				alert('To return car styles, a valid car make, model and year values are needed.');
 			}
 		},
 		api: function(endpoint, params, fn, method, format) {
