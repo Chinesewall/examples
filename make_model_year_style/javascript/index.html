@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Get Make/Model/Year/Style data</title>
+	<!--[if IE]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body>
+	
+	<script src="logic.js"></script>
+	<script>
+		(function() {
+			var mmys = EDAPIEX.MMYS;
+			// First step is to get the list of makes
+			mmys.init(function(data){
+				var makes = mmys.getMakes();
+				mmys.getModels(function(data) {
+					var subs = mmys.getSubmodels('bmw', 'x5');
+					console.log(subs);
+				}, 'bmw');
+			}, {api_key: '2ep93tpnyh6p5hgaxmp6pasq', state: 'new'});
+		})();
+	</script>
+</body>
+</html>
